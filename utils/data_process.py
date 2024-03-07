@@ -46,6 +46,8 @@ def add_5days_before(data):
     :param data:输入不少于5天的数据
     :return:加入5天前的数据，数据标签为onedb, twodb, threedb, fourdb, fivedb
     """
+    if len(data) < 5:
+        raise Exception("数据长度不足5天")
 
     add_col_name = ["onedb", "twodb", "threedb", "fourdb", "fivedb"]
 

@@ -28,8 +28,12 @@ from utils.data_process import read_from_dataset_folders, add_5days_before
 def data_analysis(data):
     # 可视化数据分布
     pd.set_option('display.max_columns', None) # 显示所有列
+    print("")
+    print("-" * 20 + "数据描述：" + "-" * 20)
     print(data.describe()) # 包括计数、均值、标准差、最小值、四分位数、最大值
+    print("-" * 20 + "数据信息：" + "-" * 20)
     print(data.info()) # 包括每列的非空值数量、数据类型
+    print("-" * 20 + "数据列名：" + "-" * 20)
     print(data.columns) # 列名
 
     # 直方图
@@ -37,7 +41,8 @@ def data_analysis(data):
     plt.show()
 
     # 相关性矩阵
-    corr_matrix = data.corr()
+    corr_matrix = data.iloc[:, 1:].corr()
+    print("-" * 20 + "相关性矩阵：" + "-" * 20)
     print(corr_matrix)
     sns.heatmap(corr_matrix, annot=True, cmap="YlGnBu") # RdYlGn
     plt.show()
