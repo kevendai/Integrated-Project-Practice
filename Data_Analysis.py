@@ -48,5 +48,11 @@ def read_from_dataset_folders(path="./data/dataset02", cal_avg=True):
 
     return data
 
-data=read_from_dataset_folders()
-data.to_csv("data.csv",index=False)
+def data_analysis(data):
+    # 可视化数据分布
+    print(data.describe())
+    print(data.info())
+
+
+data = read_from_dataset_folders()
+data_analysis(data)
