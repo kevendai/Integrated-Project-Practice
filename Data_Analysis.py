@@ -23,7 +23,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
-from utils.data_process import read_from_dataset_folders
+from utils.data_process import read_from_dataset_folders, add_5days_before
 
 def data_analysis(data):
     # 可视化数据分布
@@ -57,4 +57,5 @@ def data_analysis(data):
 
 if __name__ == "__main__":
     data = read_from_dataset_folders()
+    data = add_5days_before(data)
     data_analysis(data)
