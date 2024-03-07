@@ -68,11 +68,24 @@ def Z_score(data):
         new_df[col] = (data[col] - data[col].mean()) / data[col].std()
     return new_df
 
+def min_max(data):
+    """
+    使用min-max方法标准化数据
+
+    :param data:输入数据
+    :return:标准化后的数据
+    """
+    new_df = pd.DataFrame(columns=data.columns)
+    new_df["Date"] = data["Date"]
+    for col in data.columns[1:]:
+        new_df[col] = (data[col] - data[col].min()) / (data[col].max() - data[col].min())
+    return new_df
+
 if __name__ == "__main__":
     pd.set_option('display.max_columns', None)
     test_data = read_from_dataset_folders("../data/dataset02")
     print(test_data)
     data = add_5days_before(test_data)
     print(data)
-    data = Z_score(data)
+    data = min_max(data)
     print(data)
