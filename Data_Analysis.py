@@ -23,36 +23,38 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
-
-def read_from_dataset_folders(path="./data/dataset02", cal_avg=True):
-    # 读取文件夹下所有文件
-    file_list = os.listdir(path)
-
-
-    # 异常处理：非csv文件、空文件夹
-    for file in file_list:
-        if file.split(".")[-1] != "csv":
-            file_list.remove(file)
-    file_num = len(file_list)
-    if file_num == 0:
-        raise Exception("文件夹为空")
-
-    # 读取所有文件，并相加，但是data字串不相加
-    data = pd.read_csv(path + "/" + file_list[0])
-    for i in range(1, file_num):
-        data.iloc[:, 1:] += pd.read_csv(path + "/" + file_list[i]).iloc[:, 1:]
-
-    # 计算平均值
-    if cal_avg:
-        data[data.columns[1:]] = data[data.columns[1:]] / file_num
-
-    return data
+from utils.data_process import read_from_dataset_folders
 
 def data_analysis(data):
     # 可视化数据分布
-    print(data.describe())
-    print(data.info())
+    pd.set_option('display.max_columns', None) # 显示所有列
+    print(data.describe()) # 包括计数、均值、标准差、最小值、四分位数、最大值
+    print(data.info()) # 包括每列的非空值数量、数据类型
+    print(data.columns) # 列名
+
+    # 直方图
+    data.hist(bins=50, figsize=(20, 15))
+    plt.show()
+
+    # 相关性矩阵
+    corr_matrix = data.corr()
+    print(corr_matrix)
+    sns.heatmap(corr_matrix, annot=True, cmap="YlGnBu") # RdYlGn
+    plt.show()
+
+    # Discharge与其他变量的散点图
+    sns.pairplot(data, y_vars=["Discharge"], x_vars=['Prcp'], kind='scatter')
+    plt.show()
+
+    # Discharge随时间的折线图
+    data.plot(x='Date', y='Discharge', kind='line')
+    plt.show()
+
+    # 所有数据的箱线图
+    data.boxplot()
+    plt.show()
 
 
-data = read_from_dataset_folders()
-data_analysis(data)
+if __name__ == "__main__":
+    data = read_from_dataset_folders()
+    data_analysis(data)
