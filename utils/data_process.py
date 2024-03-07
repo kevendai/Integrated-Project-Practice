@@ -10,8 +10,9 @@
 
 import pandas as pd
 import os
+import copy
 
-def read_from_dataset_folders(path="./data/dataset02", cal_avg=True):
+def read_from_dataset_folders(path="./data/dataset02", cal_avg=True, drop_Swe = True):
     # 读取文件夹下所有文件
     file_list = os.listdir(path)
 
@@ -33,6 +34,9 @@ def read_from_dataset_folders(path="./data/dataset02", cal_avg=True):
     if cal_avg:
         data[data.columns[1:]] = data[data.columns[1:]] / file_num
 
+    if drop_Swe:
+        data = data.drop("Swe", axis=1)
+
     return data
 
 def add_5days_before(data):
@@ -46,7 +50,7 @@ def add_5days_before(data):
     add_col_name = ["onedb", "twodb", "threedb", "fourdb", "fivedb"]
 
     for i in range(len(add_col_name)):
-        data.loc[:, add_col_name[i]] = data["Discharge"].shift(i+1)
+        data.loc[:, add_col_name[i]] = copy.deepcopy(data["Discharge"].shift(i+1))
 
     data = data.dropna()
     return data
@@ -58,8 +62,11 @@ def Z_score(data):
     :param data:输入数据
     :return:标准化后的数据
     """
-    data.loc[:, 1:] = (data.loc[:, 1:] - data.loc[:, 1:].mean()) / data.loc[:, 1:].std()
-    return data
+    new_df = pd.DataFrame(columns=data.columns)
+    new_df["Date"] = data["Date"]
+    for col in data.columns[1:]:
+        new_df[col] = (data[col] - data[col].mean()) / data[col].std()
+    return new_df
 
 if __name__ == "__main__":
     pd.set_option('display.max_columns', None)
