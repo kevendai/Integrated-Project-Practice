@@ -1,5 +1,5 @@
 ```
-Python版本 3.9.18
+Python 3.9.18
 pandas 2.2.1
 numpy 1.26.4
 pillow 10.2.0
