@@ -5,7 +5,7 @@
 @File    ：data_process.py
 @Author  ：Dai Yikai
 @Date    ：2024/3/7 20:36 
-@Function：
+@Function：读取文件、添加前五天数据
 """
 
 import pandas as pd
@@ -51,8 +51,21 @@ def add_5days_before(data):
     data = data.dropna()
     return data
 
+def Z_score(data):
+    """
+    使用Z_score方法标准化数据
+
+    :param data:输入数据
+    :return:标准化后的数据
+    """
+    data.loc[:, 1:] = (data.loc[:, 1:] - data.loc[:, 1:].mean()) / data.loc[:, 1:].std()
+    return data
+
 if __name__ == "__main__":
+    pd.set_option('display.max_columns', None)
     test_data = read_from_dataset_folders("../data/dataset02")
     print(test_data)
     data = add_5days_before(test_data)
+    print(data)
+    data = Z_score(data)
     print(data)
