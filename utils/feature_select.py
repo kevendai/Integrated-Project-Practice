@@ -31,6 +31,7 @@ def MIC2nfeature(data, n=5):
     :param n: 选择的特征数
     :return: 选择的特征
     """
+    # 在https://www.lfd.uci.edu/~gohlke/pythonlibs/#minepy 下载minepy-1.2.6-cp39-cp39-win_amd64.whl
     from minepy import MINE
     mine = MINE()
     mic = []
@@ -39,7 +40,7 @@ def MIC2nfeature(data, n=5):
         mine.compute_score(data[col], data["Discharge"])
         mic.append(mine.mic())
     mic = np.array(mic)
-    return data.columns[1:][np.argsort(-mic)][:n]
+    return data.columns[1:][np.argsort(-mic)][1:n+1]
 
 if __name__ == "__main__":
     from data_process import read_from_dataset_folders, add_5days_before, Z_score
