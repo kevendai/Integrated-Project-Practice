@@ -8,7 +8,7 @@
 @Function：
 """
 
-from utils.data_process import read_from_dataset_folders, add_5days_before, Z_score
+from utils.data_process import read_from_dataset_folders, add_5days_before, Z_score, min_max
 from utils.feature_select import Feature_Select
 
 from sklearn.neural_network import MLPRegressor
@@ -58,13 +58,13 @@ def Visualization(y_train, y_train_predict, y_test, y_test_predict, model_name, 
     # 可视化
     # 标题：训练集和测试集的真实值与预测值对比
     plt.title("{}模型训练集的真实值与预测值对比".format(model_name))
-    plt.plot(range(len(y_train)), y_train, label="true")
     plt.plot(range(len(y_train)), y_train_predict, label="predict")
+    plt.plot(range(len(y_train)), y_train, label="true")
     plt.legend()
     plt.show()
     plt.title("{}训练集的真实值与预测值对比".format(model_name))
-    plt.plot(range(len(y_test)), y_test, label="true")
     plt.plot(range(len(y_test)), y_test_predict, label="predict")
+    plt.plot(range(len(y_test)), y_test, label="true")
     plt.legend()
     plt.show()
 
@@ -122,7 +122,7 @@ def SVM_Discharge(data, features, train_size=0.8):
 if __name__ == "__main__":
     data = read_from_dataset_folders()
     data = add_5days_before(data)
-    data = Z_score(data)
+    data = min_max(data)
     selector = Feature_Select()
     features = selector.Pearson_Correlation2nfeature(data, 5)
     model = SVM_Discharge(data, features)
