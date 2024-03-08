@@ -9,7 +9,8 @@
 """
 
 # 数据包括Date,Discharge,Dayl,Prcp,Srad,Swe,Tmax,Tmin,Vp字段
-# Date: 日期, Discharge: 流量
+# Date: 日期
+# Discharge: 流量
 # Dayl: 每天白天的持续时间（以秒为单位）。此计算基于一天中太阳位于假设的平坦地平线上方的时间段
 # Prcp: 每日总降水量（毫米）。所有形式降水的总和转换为水当量深度。
 # Srad: 入射短波辐射通量密度（以瓦/平方米为单位），取一天中白天时段的平均值。注：每日总辐射量（MJ/m2/day）可计算如下：（（srad (W/m2) * dayl (s/day)）/l,000,000）

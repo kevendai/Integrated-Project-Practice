@@ -12,10 +12,10 @@ import pandas as pd
 import os
 import copy
 
-def read_from_dataset_folders(path="./data/dataset02", cal_avg=True, drop_Swe = True):
+
+def read_from_dataset_folders(path="./data/dataset02", cal_avg=True, drop_Swe=True):
     # 读取文件夹下所有文件
     file_list = os.listdir(path)
-
 
     # 异常处理：非csv文件、空文件夹
     for file in file_list:
@@ -39,6 +39,7 @@ def read_from_dataset_folders(path="./data/dataset02", cal_avg=True, drop_Swe = 
 
     return data
 
+
 def add_5days_before(data):
     """
     加入前五天的数据，同时删除最早五天的数据
@@ -52,10 +53,11 @@ def add_5days_before(data):
     add_col_name = ["onedb", "twodb", "threedb", "fourdb", "fivedb"]
 
     for i in range(len(add_col_name)):
-        data.loc[:, add_col_name[i]] = copy.deepcopy(data["Discharge"].shift(i+1))
+        data.loc[:, add_col_name[i]] = copy.deepcopy(data["Discharge"].shift(i + 1))
 
     data = data.dropna()
     return data
+
 
 def Z_score(data):
     """
@@ -70,6 +72,7 @@ def Z_score(data):
         new_df[col] = (data[col] - data[col].mean()) / data[col].std()
     return new_df
 
+
 def min_max(data):
     """
     使用min-max方法标准化数据
@@ -82,6 +85,7 @@ def min_max(data):
     for col in data.columns[1:]:
         new_df[col] = (data[col] - data[col].min()) / (data[col].max() - data[col].min())
     return new_df
+
 
 if __name__ == "__main__":
     pd.set_option('display.max_columns', None)
