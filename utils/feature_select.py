@@ -16,7 +16,8 @@ class Feature_Select:
 
     皮尔逊相关系数法: Pearson_Correlation2nfeature；
     最大信息系数法: MIC2nfeature；
-    距离相关系数法: Distance_Correlation2nfeature。
+    距离相关系数法: Distance_Correlation2nfeature；
+    SVM法: SVM2nfeature。
 
     Attributes:
         n: 选择的特征数，初始化为None，调用方法后赋值
@@ -85,23 +86,28 @@ class Feature_Select:
         self.feature_result = data.columns[1:][np.argsort(-dis_corr)][1:n+1]
         return self.feature_result
 
-    # def SVM2nfeature(self, data, n=5):
-    #     """
-    #     SVM法选择与Discharge相关性最高的n个特征
-    #
-    #     :param data: 输入数据
-    #     :param n: 选择的特征数
-    #     :return: 选择的特征
-    #     """
-    #     from sklearn.svm import SVR
-    #     self.func = "SVM法"
-    #     self.n = n
-    #     X = data.iloc[:, 1:]
-    #     y = data["Discharge"]
-    #     clf = SVR(kernel='linear')
-    #     clf.fit(X, y)
-    #     self.feature_result = X.columns[np.argsort(-np.abs(clf.coef_))][:n]
-    #     return self.feature_result
+    def SVM2nfeature(self, data, n=5):
+        """
+        SVM法选择与Discharge相关性最高的n个特征
+
+        :param data: 输入数据
+        :param n: 选择的特征数
+        :return: 选择的特征
+        """
+        from sklearn.svm import SVR
+        self.func = "SVM法"
+        self.n = n
+        X = data.iloc[:, 2:]
+        print(type(X))
+        y = data["Discharge"]
+        clf = SVR(kernel='linear')
+        clf.fit(X, y)
+        print(clf.coef_)
+        # clf.coef_是一个ndarray，存放了每个特征的权重
+        self.feature_result = X.columns[np.argsort(-abs(clf.coef_))[0]][:n]
+
+        return self.feature_result
+
 
 if __name__ == "__main__":
     from data_process import read_from_dataset_folders, add_5days_before, Z_score
@@ -109,6 +115,5 @@ if __name__ == "__main__":
     data = add_5days_before(data)
     data = Z_score(data)
     selector = Feature_Select()
-    result = selector.Pearson_Correlation2nfeature(data)
+    result = selector.SVM2nfeature(data)
     print("使用{}方法筛选出的特征为：{}".format(selector.func, result))
-    print()
