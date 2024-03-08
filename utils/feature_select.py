@@ -39,7 +39,7 @@ class Feature_Select:
         """
         self.func = "皮尔逊相关系数法"
         self.n = n
-        corr_matrix = data.corr()
+        corr_matrix = data.iloc[:, 1:].corr()
         corr_matrix = abs(corr_matrix["Discharge"]).sort_values(ascending=False)
         self.feature_result = corr_matrix.index[1:n+1]
         return self.feature_result
@@ -85,10 +85,30 @@ class Feature_Select:
         self.feature_result = data.columns[1:][np.argsort(-dis_corr)][1:n+1]
         return self.feature_result
 
+    # def SVM2nfeature(self, data, n=5):
+    #     """
+    #     SVM法选择与Discharge相关性最高的n个特征
+    #
+    #     :param data: 输入数据
+    #     :param n: 选择的特征数
+    #     :return: 选择的特征
+    #     """
+    #     from sklearn.svm import SVR
+    #     self.func = "SVM法"
+    #     self.n = n
+    #     X = data.iloc[:, 1:]
+    #     y = data["Discharge"]
+    #     clf = SVR(kernel='linear')
+    #     clf.fit(X, y)
+    #     self.feature_result = X.columns[np.argsort(-np.abs(clf.coef_))][:n]
+    #     return self.feature_result
+
 if __name__ == "__main__":
     from data_process import read_from_dataset_folders, add_5days_before, Z_score
     data = read_from_dataset_folders("../data/dataset02")
     data = add_5days_before(data)
     data = Z_score(data)
     selector = Feature_Select()
-    print(selector.MIC2nfeature(data))
+    result = selector.Pearson_Correlation2nfeature(data)
+    print("使用{}方法筛选出的特征为：{}".format(selector.func, result))
+    print()

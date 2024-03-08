@@ -5,6 +5,7 @@ numpy 1.26.4
 pillow 10.2.0
 seaborn 0.13.2
 scipy 1.12.0
+scikit-learn 1.4.1.post1
 ```
 
 ### 2024-3-7 21:41 已完成数据可视化分析，utils.data_process中有添加五天内的径流量数据的函数
