@@ -46,23 +46,21 @@ def add_5days_before(data, is_add_Prcp=True):
 
     :param data:输入不少于5天的数据
     :param is_add_Prcp:是否加入降水量
-    :return:加入5天前的数据，数据标签为oneDischarge, twoDischarge, threeDischarge, fourDischarge, fiveDischarge，
-    如果加入降水量，标签为onePrcp, twoPrcp, threePrcp, fourPrcp, fivePrcp
+    :return:加入5天前的数据，数据标签为one_Discharge, two_Discharge, three_Discharge, four_Discharge, five_Discharge，
+    如果加入降水量，标签为one_Prcp, two_Prcp, three_Prcp, four_Prcp, five_Prcp
     """
     if len(data) < 5:
         raise Exception("数据长度不足5天")
 
-    add_col_name = ["oneDischarge", "twoDischarge", "threeDischarge", "fourDischarge", "fiveDischarge"]
+    add_col_name = ["one_Discharge", "two_Discharge", "three_Discharge", "four_Discharge", "five_Discharge"]
 
     if is_add_Prcp:
         # 添加五天的降水量
-        add_col_name += ["onePrcp", "twoPrcp", "threePrcp", "fourPrcp", "fivePrcp"]
-
+        add_col_name += ["one_Prcp", "two_Prcp", "three_Prcp", "four_Prcp", "five_Prcp"]
 
     for i in range(len(add_col_name)):
-        data.loc[:, add_col_name[i]] = copy.deepcopy(data["Discharge"].shift(i + 1))
-        if is_add_Prcp:
-            data.loc[:, add_col_name[i + 5]] = copy.deepcopy(data["Prcp"].shift(i + 1))
+        feature_name = add_col_name[i].split("_")[1]
+        data[add_col_name[i]] = data[feature_name].shift(i % 5 + 1)
 
     data = data.dropna()
     return data
