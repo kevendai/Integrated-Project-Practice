@@ -98,11 +98,9 @@ class Feature_Select:
         self.func = "SVM法"
         self.n = n
         X = data.iloc[:, 2:]
-        print(type(X))
         y = data["Discharge"]
         clf = SVR(kernel='linear')
         clf.fit(X, y)
-        print(clf.coef_)
         # clf.coef_是一个ndarray，存放了每个特征的权重
         self.feature_result = X.columns[np.argsort(-abs(clf.coef_))[0]][:n]
 

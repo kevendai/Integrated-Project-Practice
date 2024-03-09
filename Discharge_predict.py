@@ -60,9 +60,9 @@ class Discharge_Predict:
         :param train_size: 训练集比例
         :return: X_train, X_test, y_train, y_test
         """
-        X = data.loc[:, features]
-        y = data["Discharge"]
-        data_size = len(data)
+        X = self.data.loc[:, self.features]
+        y = self.data["Discharge"]
+        data_size = len(self.data)
         train_size = int(data_size * train_size)
         X_train, X_test = X[:train_size], X[train_size:]
         y_train, y_test = y[:train_size], y[train_size:]
@@ -144,7 +144,6 @@ class Discharge_Predict:
         :param C: 惩罚系数
         :param gamma: 核系数
         :param tol: 容忍度
-        :param is_grid_search: 是否进行网格搜索交叉验证
 
         :return: 测试集MSE
         """
@@ -166,14 +165,13 @@ class Discharge_Predict:
             return mean_squared_error(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
                                       self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
 
-    def Grid_search_CV(self, model_name, cv=3, is_visual=True):
+    def Grid_search_CV(self, model_name, cv=3, is_visual=True, max_iter=1000, verbose=2):
         """
         网格搜索交叉验证
 
-        :param data: 输入数据
-        :param features: 选择的特征
-        :param train_size: 训练集比例
-        :param cv: 交叉验证次数
+        :param model_name: 模型名称
+        :param cv: 交叉验证折数
+        :param is_visual: 是否可视化
 
         :return: 测试集MSE
         """
@@ -187,7 +185,7 @@ class Discharge_Predict:
                 'activation': ['relu', 'logistic', 'tanh'],
                 'solver': ['adam', 'sgd']
             }
-            model = GridSearchCV(MLPRegressor(), param_grid, cv=cv, verbose=1)
+            model = GridSearchCV(MLPRegressor(max_iter=max_iter), param_grid, cv=cv, verbose=verbose)
             model.fit(self.X_train, self.y_train)
             y_train_predict = model.predict(self.X_train)
             y_test_predict = model.predict(self.X_test)
@@ -205,7 +203,7 @@ class Discharge_Predict:
                 'gamma': ['scale', 'auto'],
                 'tol': [1e-3, 1e-4, 1e-5]
             }
-            model = GridSearchCV(SVR(), param_grid, cv=cv, verbose=1)
+            model = GridSearchCV(SVR(max_iter=max_iter), param_grid, cv=cv, verbose=verbose)
             model.fit(self.X_train, self.y_train)
             y_train_predict = model.predict(self.X_train)
             y_test_predict = model.predict(self.X_test)
@@ -221,12 +219,69 @@ class Discharge_Predict:
             return mean_squared_error(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
                                       self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
 
+def get_best_model(data, cv=3, feature_num=5, is_reverse=False):
+    """
+    两种归一化方案（Z-score和min-max）、
+    两种特征选择方案（Pearson相关系数和SVM法）、
+    两种模型（BP神经网络和SVM），
+    分别进行网格搜索交叉验证，获取最优模型
+
+    :param data: 输入数据
+    :param cv: 交叉验证折数
+    :param feature_num: 特征数
+    :param is_reverse: 是否进行反归一化
+
+    :return: 最优模型的测试集MSE
+    """
+    best_mse = float("inf")
+    best_model_name = None
+    best_feature = None
+    best_selector_norm = None
+    best_norm = None
+    data = add_5days_before(data)
+    Normalization = [Z_score, min_max]
+    reverse_Normalization = [reverse_Z_score, reverse_min_max]
+    for Norm_method, reverse_method in zip(Normalization, reverse_Normalization):
+        norm_data, origin_param1, origin_param2 = Norm_method(data)
+        selector = [Feature_Select(), Feature_Select()]
+        features = [selector[0].Pearson_Correlation2nfeature(norm_data, feature_num),
+                    selector[1].SVM2nfeature(norm_data, feature_num)]
+        for selector_method in selector:
+            for model_name in ["SVM", "BP神经网络"]:
+                print("-" * 10 + "正在进行基于{}归一化方法、{}特征选择方法、{}模型的网格搜索交叉验证".format(Norm_method.__name__,
+                                                                                      selector_method.func, model_name) + "-" * 10)
+                if is_reverse:
+                    discharge_predict = Discharge_Predict(norm_data, selector_method.feature_result, reverse_method=reverse_method,
+                                                          reverse_param=(origin_param1, origin_param2))
+                else:
+                    discharge_predict = Discharge_Predict(norm_data, selector_method.feature_result)
+                mse_ = discharge_predict.Grid_search_CV(model_name, cv=cv, is_visual=False)
+                print(f"归一化方法：{Norm_method.__name__}，特征选择方法：{selector_method.func}，"
+                      f"特征数：{feature_num}，模型：{model_name}，测试集MSE：{mse_}")
+                if mse_ < best_mse:
+                    best_mse = mse_
+                    best_model_name = model_name
+                    best_feature = selector_method.feature_result
+                    best_selector_norm = selector_method.func
+                    best_norm = Norm_method.__name__
+    print(f"最优模型：{best_model_name}，最优特征：{best_feature}，最优特征选择方法：{best_selector_norm}，"
+          f"最优归一化方法：{best_norm}，测试集MSE：{best_mse}")
+
+
 
 if __name__ == "__main__":
+    ignore_warning = True
+    if ignore_warning:
+        import warnings
+        warnings.filterwarnings("ignore")
+
+    # data = add_5days_before(data)
+    # data, origin_mean, origin_std = Z_score(data)
+    # selector = Feature_Select()
+    # result = selector.Pearson_Correlation2nfeature(data, n=5)
+    #
+    # discharge_predict = Discharge_Predict(data, result)
+    # discharge_predict.Grid_search_CV("SVM", cv=3, is_visual=True)
     data = read_from_dataset_folders()
-    data = add_5days_before(data)
-    data, origin_param1, origin_param2 = Z_score(data)
-    selector = Feature_Select()
-    features = selector.Pearson_Correlation2nfeature(data, 5)
-    discharge_predict = Discharge_Predict(data, features)
-    mse_ = discharge_predict.SVM_Discharge()
+    get_best_model(data, cv=3, feature_num=5, is_reverse=False)
+
