@@ -77,7 +77,7 @@ def Z_score(data):
     new_df["Date"] = data["Date"]
     for col in data.columns[1:]:
         new_df[col] = (data[col] - data[col].mean()) / data[col].std()
-    return new_df
+    return new_df, data["Discharge"].mean(), data["Discharge"].std()
 
 
 def min_max(data):
@@ -91,6 +91,31 @@ def min_max(data):
     new_df["Date"] = data["Date"]
     for col in data.columns[1:]:
         new_df[col] = (data[col] - data[col].min()) / (data[col].max() - data[col].min())
+    return new_df, data["Discharge"].min(), data["Discharge"].max()
+
+
+def reverse_min_max(data, origin_min, origin_max):
+    """
+    使用min-max方法反标准化数据，数据为单独的一列
+
+    :param data:输入数据
+    :param origin_min:最小值
+    :param origin_max:最大值
+    """
+
+    new_df = copy.deepcopy(data) * (origin_max - origin_min) + origin_min
+    return new_df
+
+
+def reverse_Z_score(data, origin_mean, origin_std, ):
+    """
+    使用Z_score方法反标准化数据，数据为单独的一列
+
+    :param data:输入数据
+    :param origin_mean:均值
+    :param origin_std:标准差
+    """
+    new_df = copy.deepcopy(data) * origin_std + origin_mean
     return new_df
 
 

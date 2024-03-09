@@ -9,6 +9,7 @@
 """
 
 from utils.data_process import read_from_dataset_folders, add_5days_before, Z_score, min_max
+from utils.data_process import reverse_Z_score, reverse_min_max
 from utils.feature_select import Feature_Select
 
 from sklearn.neural_network import MLPRegressor
@@ -37,7 +38,7 @@ class Discharge_Predict:
         model_name: 模型名称
     """
 
-    def __init__(self, data, features, train_size=0.8, model_name=None):
+    def __init__(self, data, features,  reverse_method=None, reverse_param=None, train_size=0.8, model_name=None):
         self.data = data
         self.features = features
         self.features_names = features.tolist()
@@ -46,6 +47,11 @@ class Discharge_Predict:
         self.test_MSE = None
         self.model = None
         self.model_name = model_name
+        if reverse_param is None:
+            self.reverse_param1, self.reverse_param2 = None, None
+        else:
+            self.reverse_param1, self.reverse_param2 = reverse_param
+        self.reverse_method = reverse_method
 
     def _data_split(self, train_size=0.8):
         """
@@ -70,24 +76,34 @@ class Discharge_Predict:
         :param y_test_predict: 测试集预测值
         :return: None
         """
+        if self.reverse_param1 is None:
+            y_train_predict_reverse = y_train_predict
+            y_test_predict_reverse = y_test_predict
+            y_train_reverse = self.y_train
+            y_test_reverse = self.y_test
+        else:
+            y_train_predict_reverse = self.reverse_method(y_train_predict, self.reverse_param1, self.reverse_param2)
+            y_test_predict_reverse = self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2)
+            y_train_reverse = self.reverse_method(self.y_train, self.reverse_param1, self.reverse_param2)
+            y_test_reverse = self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2)
 
         print("-" * 20 + self.model_name + "模型评估" + "-" * 20)
         print("使用特征：", self.features_names)
-        print("训练集均方误差：", mean_squared_error(self.y_train, y_train_predict))
-        print("训练集R2：", r2_score(self.y_train, y_train_predict))
-        print("测试集均方误差：", mean_squared_error(self.y_test, y_test_predict))
-        print("测试集R2：", r2_score(self.y_test, y_test_predict))
+        print("训练集均方误差：", mean_squared_error(y_train_reverse, y_train_predict_reverse))
+        print("训练集R2：", r2_score(y_train_reverse, y_train_predict_reverse))
+        print("测试集均方误差：", mean_squared_error(y_test_reverse, y_test_predict_reverse))
+        print("测试集R2：", r2_score(y_test_reverse, y_test_predict_reverse))
         print("-" * 50)
         # 可视化
         # 标题：训练集和测试集的真实值与预测值对比
         plt.title("{}模型训练集的真实值与预测值对比".format(self.model_name))
-        plt.plot(range(len(self.y_train)), y_train_predict, label="predict")
-        plt.plot(range(len(self.y_train)), self.y_train, label="true")
+        plt.plot(range(len(self.y_train)), y_train_predict_reverse, label="predict")
+        plt.plot(range(len(self.y_train)), y_train_reverse, label="true")
         plt.legend()
         plt.show()
         plt.title("{}训练集的真实值与预测值对比".format(self.model_name))
-        plt.plot(range(len(self.y_test)), y_test_predict, label="predict")
-        plt.plot(range(len(self.y_test)), self.y_test, label="true")
+        plt.plot(range(len(self.y_test)), y_test_predict_reverse, label="predict")
+        plt.plot(range(len(self.y_test)), y_test_reverse, label="true")
         plt.legend()
         plt.show()
 
@@ -101,7 +117,7 @@ class Discharge_Predict:
         :param activation: 激活函数
         :param solver: 优化器
 
-        :return: model
+        :return: 测试集MSE
         """
 
         self.model_name = "BP神经网络"
@@ -114,7 +130,11 @@ class Discharge_Predict:
 
         self._Visualization(y_train_predict, y_test_predict)
 
-        return mean_squared_error(self.y_test, y_test_predict)
+        if self.reverse_method is None:
+            return mean_squared_error(self.y_test, y_test_predict)
+        else:
+            return mean_squared_error(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
+                                      self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
 
     def SVM_Discharge(self, kernel='linear', C=1.0, gamma='scale', tol=1e-3):
         """
@@ -140,7 +160,11 @@ class Discharge_Predict:
         self._Visualization(y_train_predict, y_test_predict)
 
         # 返回测试集MSE
-        return mean_squared_error(self.y_test, y_test_predict)
+        if self.reverse_method is None:
+            return mean_squared_error(self.y_test, y_test_predict)
+        else:
+            return mean_squared_error(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
+                                      self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
 
     def Grid_search_CV(self, model_name, cv=3, is_visual=True):
         """
@@ -151,6 +175,7 @@ class Discharge_Predict:
         :param train_size: 训练集比例
         :param cv: 交叉验证次数
 
+        :return: 测试集MSE
         """
 
         # 对BPNN进行网格搜索交叉验证
@@ -190,15 +215,18 @@ class Discharge_Predict:
             if is_visual:
                 self._Visualization(y_train_predict, y_test_predict)
 
-        return mean_squared_error(self.y_test, y_test_predict)
+        if self.reverse_method is None:
+            return mean_squared_error(self.y_test, y_test_predict)
+        else:
+            return mean_squared_error(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
+                                      self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
 
 
 if __name__ == "__main__":
     data = read_from_dataset_folders()
     data = add_5days_before(data)
-    data = min_max(data)
+    data, origin_param1, origin_param2 = Z_score(data)
     selector = Feature_Select()
     features = selector.Pearson_Correlation2nfeature(data, 5)
     discharge_predict = Discharge_Predict(data, features)
-    mse_ = discharge_predict.Grid_search_CV("BP神经网络", 5)
-
+    mse_ = discharge_predict.SVM_Discharge()
