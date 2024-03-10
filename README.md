@@ -8,6 +8,7 @@ scipy 1.12.0
 scikit-learn 1.4.1.post1
 matplotlib 3.8.3
 ```
+使用requirements.txt安装依赖时请注意，因为minepy库在windows下安装会出现问题，请单独安装项目内minepy库。
 
 ## ToDo List
 - #### 第一阶段任务：3.6-4.9
