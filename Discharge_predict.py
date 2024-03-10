@@ -166,7 +166,7 @@ class Discharge_Predict:
             return mean_squared_error(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
                                       self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
 
-    def Grid_search_CV(self, model_name, cv=3, is_visual=True, max_iter=5000, verbose=2):
+    def Grid_search_CV(self, model_name, cv=3, is_visual=True, max_iter=5000, verbose=0):
         """
         网格搜索交叉验证
 
@@ -276,17 +276,21 @@ if __name__ == "__main__":
         import warnings
         warnings.filterwarnings("ignore")
 
-    # data = add_5days_before(data)
-    # data, origin_mean, origin_std = Z_score(data)
-    # selector = Feature_Select()
-    # result = selector.Pearson_Correlation2nfeature(data, n=5)
-    #
-    # discharge_predict = Discharge_Predict(data, result)
-    # discharge_predict.Grid_search_CV("SVM", cv=3, is_visual=True)
-    import time
-    print("开始时间: {}".format(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     data = pd.read_csv("./data/01333000.csv")
     data = data.drop("Swe", axis=1)
-    get_best_model(data, cv=3, feature_num=5, is_reverse=False)
-    print("结束时间: {}".format(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    data = add_5days_before(data)
+    data, origin_mean, origin_std = min_max(data)
+    selector = Feature_Select()
+    result = selector.SVM2nfeature(data, n=5)
+
+    discharge_predict = Discharge_Predict(data, result)
+    discharge_predict.Grid_search_CV("BP神经网络", cv=3, is_visual=True)
+
+
+    # import time
+    # print("开始时间: {}".format(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    # data = pd.read_csv("./data/01333000.csv")
+    # data = data.drop("Swe", axis=1)
+    # get_best_model(data, cv=3, feature_num=5, is_reverse=False)
+    # print("结束时间: {}".format(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
 
