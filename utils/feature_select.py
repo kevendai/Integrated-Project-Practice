@@ -5,7 +5,7 @@
 @File    ：feature_select.py
 @Author  ：Dai Yikai
 @Date    ：2024/3/7 22:54 
-@Function：
+@Function：在这里我们举出了四种特征选择方法，分别是皮尔逊相关系数法、最大信息系数法、距离相关系数法和SVM法
 """
 
 import pandas as pd

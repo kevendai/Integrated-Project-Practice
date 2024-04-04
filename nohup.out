@@ -1,0 +1,26 @@
+----------正在进行基于Z_score归一化方法、皮尔逊相关系数法特征选择方法、SVM模型的网格搜索交叉验证----------
+SVM的最优参数：{'C': 0.1, 'gamma': 'scale', 'kernel': 'linear', 'tol': 0.0001}
+归一化方法：Z_score，特征选择方法：皮尔逊相关系数法，特征数：5，模型：SVM，测试集MSE：0.35902506037309057
+----------正在进行基于Z_score归一化方法、皮尔逊相关系数法特征选择方法、BP神经网络模型的网格搜索交叉验证----------
+BP神经网络的最优参数：{'activation': 'tanh', 'hidden_layer_sizes': (150, 150, 150), 'learning_rate_init': 0.01, 'solver': 'sgd'}
+归一化方法：Z_score，特征选择方法：皮尔逊相关系数法，特征数：5，模型：BP神经网络，测试集MSE：0.3377095203081441
+----------正在进行基于Z_score归一化方法、SVM法特征选择方法、SVM模型的网格搜索交叉验证----------
+SVM的最优参数：{'C': 1, 'gamma': 'scale', 'kernel': 'linear', 'tol': 0.001}
+归一化方法：Z_score，特征选择方法：SVM法，特征数：5，模型：SVM，测试集MSE：0.2889886203566222
+----------正在进行基于Z_score归一化方法、SVM法特征选择方法、BP神经网络模型的网格搜索交叉验证----------
+BP神经网络的最优参数：{'activation': 'logistic', 'hidden_layer_sizes': (150, 150, 150), 'learning_rate_init': 0.001, 'solver': 'adam'}
+归一化方法：Z_score，特征选择方法：SVM法，特征数：5，模型：BP神经网络，测试集MSE：0.2560795496110425
+----------正在进行基于min_max归一化方法、皮尔逊相关系数法特征选择方法、SVM模型的网格搜索交叉验证----------
+SVM的最优参数：{'C': 10, 'gamma': 'auto', 'kernel': 'sigmoid', 'tol': 0.001}
+归一化方法：min_max，特征选择方法：皮尔逊相关系数法，特征数：5，模型：SVM，测试集MSE：0.0065227322504744735
+----------正在进行基于min_max归一化方法、皮尔逊相关系数法特征选择方法、BP神经网络模型的网格搜索交叉验证----------
+BP神经网络的最优参数：{'activation': 'tanh', 'hidden_layer_sizes': (150, 150, 150), 'learning_rate_init': 0.001, 'solver': 'adam'}
+归一化方法：min_max，特征选择方法：皮尔逊相关系数法，特征数：5，模型：BP神经网络，测试集MSE：0.0036434094336405187
+----------正在进行基于min_max归一化方法、SVM法特征选择方法、SVM模型的网格搜索交叉验证----------
+SVM的最优参数：{'C': 10, 'gamma': 'auto', 'kernel': 'sigmoid', 'tol': 0.001}
+归一化方法：min_max，特征选择方法：SVM法，特征数：5，模型：SVM，测试集MSE：0.005710665725005879
+----------正在进行基于min_max归一化方法、SVM法特征选择方法、BP神经网络模型的网格搜索交叉验证----------
+BP神经网络的最优参数：{'activation': 'relu', 'hidden_layer_sizes': (50, 50, 50), 'learning_rate_init': 0.01, 'solver': 'adam'}
+归一化方法：min_max，特征选择方法：SVM法，特征数：5，模型：BP神经网络，测试集MSE：0.0025382278732818658
+最优模型：BP神经网络，最优特征：Index(['one_Discharge', 'Prcp', 'Tmin', 'one_Prcp', 'Vp'], dtype='object')，最优特征选择方法：SVM法，最优归一化方法：min_max，测试集MSE：0.0025382278732818658
+END!

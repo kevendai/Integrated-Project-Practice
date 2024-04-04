@@ -38,30 +38,57 @@ def data_analysis(data):
     print(data.columns) # 列名
 
     # 直方图
+    # 显示图表名称
     data.hist(bins=50, figsize=(20, 15))
+    plt.title("Histogram")
     plt.show()
+
+    # 异常值检测
+    # 是否有缺失值
+    print("-" * 20 + "缺失值检测：" + "-" * 20)
+    print("是否有缺失值：", data.isnull().values.any())
+    if data.isnull().values.any():
+        print("缺失值数量：", data.isnull().sum().sum())
+        print("每列缺失值数量：")
+        print(data.isnull().sum())
+    # 是否有全为零的列或者行
+    print("-" * 20 + "全为零检测：" + "-" * 20)
+    print("是否有全为零的列：", (data == 0).all().any())
+    if (data == 0).all().any():
+        print("全为零的列数量：", (data == 0).all().sum())
+        print("全为零的列名：")
+        print(data.columns[(data == 0).all()])
+    print("是否有全为零的行：", (data == 0).all(axis=1).any())
+    if (data == 0).all(axis=1).any():
+        print("全为零的行数量：", (data == 0).all(axis=1).sum())
+        print("全为零的行索引：")
+        print(data.index[(data == 0).all(axis=1)])
 
     # 相关性矩阵
     corr_matrix = data.iloc[:, 1:].corr()
     print("-" * 20 + "相关性矩阵：" + "-" * 20)
     print(corr_matrix)
     sns.heatmap(corr_matrix, annot=True, cmap="YlGnBu") # RdYlGn
+    plt.title("Correlation Matrix")
     plt.show()
 
     # Discharge与其他变量的散点图
     sns.pairplot(data, y_vars=["Discharge"], x_vars=['Prcp'], kind='scatter')
+    plt.title("Scatter Plot")
     plt.show()
 
     # Discharge随时间的折线图
     data.plot(x='Date', y='Discharge', kind='line')
+    plt.title("Discharge Line Plot")
     plt.show()
 
     # 所有数据的箱线图
     data.boxplot()
+    plt.title("Boxplot")
     plt.show()
 
 
 if __name__ == "__main__":
-    data = read_from_dataset_folders()
+    data = read_from_dataset_folders(drop_Swe=False)
     data = add_5days_before(data)
     data_analysis(data)
