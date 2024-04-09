@@ -102,7 +102,7 @@ class Discharge_Predict:
         plt.plot(range(len(self.y_train)), y_train_reverse, label="true")
         plt.legend()
         plt.show()
-        plt.title("{}训练集的真实值与预测值对比".format(self.model_name))
+        plt.title("{}模型测试集的真实值与预测值对比".format(self.model_name))
         plt.plot(range(len(self.y_test)), y_test_predict_reverse, label="predict")
         plt.plot(range(len(self.y_test)), y_test_reverse, label="true")
         plt.legend()
@@ -283,8 +283,8 @@ if __name__ == "__main__":
     selector = Feature_Select()
     result = selector.SVM2nfeature(data, n=5)
 
-    discharge_predict = Discharge_Predict(data, result)
-    discharge_predict.Grid_search_CV("BP神经网络", cv=3, is_visual=True)
+    discharge_predict = Discharge_Predict(data, result, reverse_method=reverse_min_max, reverse_param=(origin_mean, origin_std))
+    discharge_predict.BPNN_Discharge(learning_rate_init=0.01)
 
 
     # import time
