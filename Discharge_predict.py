@@ -69,7 +69,7 @@ class Discharge_Predict:
         y_train, y_test = y[:train_size], y[train_size:]
         return X_train, X_test, y_train, y_test
 
-    def _Visualization(self, y_train_predict, y_test_predict):
+    def _Visualization(self, y_train_predict, y_test_predict, is_save=False):
         """
         可视化
 
@@ -95,33 +95,34 @@ class Discharge_Predict:
         print("测试集均方误差：", mean_squared_error(y_test_reverse, y_test_predict_reverse))
         print("测试集R2：", r2_score(y_test_reverse, y_test_predict_reverse))
         print("-" * 50)
-        with open("./result/output.txt", "a") as f:
-            f.write("-" * 20 + self.model_name + "模型评估" + "-" * 20 + "\n")
-            f.write("使用特征：" + str(self.features_names) + "\n")
-            f.write("训练集均方误差：" + str(mean_squared_error(y_train_reverse, y_train_predict_reverse)) + "\n")
-            f.write("训练集R2：" + str(r2_score(y_train_reverse, y_train_predict_reverse)) + "\n")
-            f.write("测试集均方误差：" + str(mean_squared_error(y_test_reverse, y_test_predict_reverse)) + "\n")
-            f.write("测试集R2：" + str(r2_score(y_test_reverse, y_test_predict_reverse)) + "\n")
-            f.write("-" * 50 + "\n")
+        if is_save:
+            with open("./result/output.txt", "a") as f:
+                f.write("-" * 20 + self.model_name + "模型评估" + "-" * 20 + "\n")
+                f.write("使用特征：" + str(self.features_names) + "\n")
+                f.write("训练集均方误差：" + str(mean_squared_error(y_train_reverse, y_train_predict_reverse)) + "\n")
+                f.write("训练集R2：" + str(r2_score(y_train_reverse, y_train_predict_reverse)) + "\n")
+                f.write("测试集均方误差：" + str(mean_squared_error(y_test_reverse, y_test_predict_reverse)) + "\n")
+                f.write("测试集R2：" + str(r2_score(y_test_reverse, y_test_predict_reverse)) + "\n")
+                f.write("-" * 50 + "\n")
         # 可视化
         # 标题：训练集和测试集的真实值与预测值对比
         plt.title("{}模型训练集的真实值与预测值对比".format(self.model_name))
         plt.plot(range(len(self.y_train)), y_train_predict_reverse, label="predict")
         plt.plot(range(len(self.y_train)), y_train_reverse, label="true")
         plt.legend()
-        # 保存
-        plt.savefig(f"./result/{self.model_name}_train.png")
+        if is_save:
+            plt.savefig(f"./result/{self.model_name}_train.png")
         plt.show()
         plt.title("{}模型测试集的真实值与预测值对比".format(self.model_name))
         plt.plot(range(len(self.y_test)), y_test_predict_reverse, label="predict")
         plt.plot(range(len(self.y_test)), y_test_reverse, label="true")
         plt.legend()
-        # 保存
-        plt.savefig(f"./result/{self.model_name}_test.png")
+        if is_save:
+            plt.savefig(f"./result/{self.model_name}_test.png")
         plt.show()
 
     def BPNN_Discharge(self, hidden_layer_sizes=(100, 100, 100), learning_rate_init=0.001, activation='relu',
-                       solver='adam'):
+                       solver='adam', is_save=False):
         """
         BP神经网络预测
 
@@ -141,7 +142,7 @@ class Discharge_Predict:
         y_train_predict = model.predict(self.X_train)
         y_test_predict = model.predict(self.X_test)
 
-        self._Visualization(y_train_predict, y_test_predict)
+        self._Visualization(y_train_predict, y_test_predict, is_save=is_save)
 
         if self.reverse_method is None:
             return mean_squared_error(self.y_test, y_test_predict)
@@ -149,7 +150,7 @@ class Discharge_Predict:
             return mean_squared_error(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
                                       self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
 
-    def SVM_Discharge(self, kernel='linear', C=1.0, gamma='scale', tol=1e-3):
+    def SVM_Discharge(self, kernel='linear', C=1.0, gamma='scale', tol=1e-3, is_save=False):
         """
         SVM预测
 
@@ -169,7 +170,7 @@ class Discharge_Predict:
         y_test_predict = model.predict(self.X_test)
 
         # 可视化
-        self._Visualization(y_train_predict, y_test_predict)
+        self._Visualization(y_train_predict, y_test_predict, is_save=is_save)
 
         # 返回测试集MSE
         if self.reverse_method is None:
