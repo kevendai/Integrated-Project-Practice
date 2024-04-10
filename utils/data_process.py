@@ -79,8 +79,9 @@ def Z_score(data, train_size=0.8):
     mean = data.iloc[:int(len(data) * train_size), 1:].mean()
     std = data.iloc[:int(len(data) * train_size), 1:].std()
     for col in data.columns[1:]:
-        new_df[col] = (data[col] - mean) / std
-    return new_df, mean, std
+        new_df[col] = (data[col] - mean[col]) / std[col]
+    print(new_df)
+    return new_df, data["Discharge"].mean(), data["Discharge"].std()
 
 
 def min_max(data, train_size=0.8):
@@ -95,8 +96,8 @@ def min_max(data, train_size=0.8):
     max_value = data.iloc[:int(len(data) * train_size), 1:].max()
     min_value = data.iloc[:int(len(data) * train_size), 1:].min()
     for col in data.columns[1:]:
-        new_df[col] = (data[col] - min_value) / (max_value - min_value)
-    return new_df, min_value, max_value
+        new_df[col] = (data[col] - min_value[col]) / (max_value[col] - min_value[col])
+    return new_df, data["Discharge"].min(), data["Discharge"].max()
 
 # Z-score简单归一化
 def Z_score_simple(data):

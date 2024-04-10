@@ -296,8 +296,8 @@ if __name__ == "__main__":
     result = selector.SVM2nfeature(data, n=5)
 
     discharge_predict = Discharge_Predict(data, result, reverse_method=reverse_min_max, reverse_param=(origin_mean, origin_std))
-    # discharge_predict.BPNN_Discharge(learning_rate_init=0.01)
-    discharge_predict.SVM_Discharge(C=1, gamma='scale', tol=0.001)
+    discharge_predict.BPNN_Discharge(learning_rate_init=0.01)
+    # discharge_predict.SVM_Discharge(C=1, gamma='scale', tol=0.001)
 
     # import time
     # print("开始时间: {}".format(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
