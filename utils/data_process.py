@@ -11,6 +11,7 @@
 import pandas as pd
 import os
 import copy
+import numpy as np
 
 
 def read_from_dataset_folders(path="./data/dataset02", cal_avg=True, drop_Swe=True):
@@ -66,7 +67,39 @@ def add_5days_before(data, is_add_Prcp=True):
     return data
 
 
-def Z_score(data):
+def Z_score(data, train_size=0.8):
+    """
+    使用Z_score方法标准化数据
+
+    :param data:输入数据
+    :return:标准化后的数据
+    """
+    new_df = pd.DataFrame(columns=data.columns)
+    new_df["Date"] = data["Date"]
+    mean = data.iloc[:int(len(data) * train_size), 1:].mean()
+    std = data.iloc[:int(len(data) * train_size), 1:].std()
+    for col in data.columns[1:]:
+        new_df[col] = (data[col] - mean) / std
+    return new_df, mean, std
+
+
+def min_max(data, train_size=0.8):
+    """
+    使用min-max方法标准化数据
+
+    :param data:输入数据
+    :return:标准化后的数据
+    """
+    new_df = pd.DataFrame(columns=data.columns)
+    new_df["Date"] = data["Date"]
+    max_value = data.iloc[:int(len(data) * train_size), 1:].max()
+    min_value = data.iloc[:int(len(data) * train_size), 1:].min()
+    for col in data.columns[1:]:
+        new_df[col] = (data[col] - min_value) / (max_value - min_value)
+    return new_df, min_value, max_value
+
+# Z-score简单归一化
+def Z_score_simple(data):
     """
     使用Z_score方法标准化数据
 
@@ -76,13 +109,12 @@ def Z_score(data):
     new_df = pd.DataFrame(columns=data.columns)
     new_df["Date"] = data["Date"]
     for col in data.columns[1:]:
-        new_df[col] = (data[col] - data[col].mean()) / data[col].std()
-    return new_df, data["Discharge"].mean(), data["Discharge"].std()
-
-
-def min_max(data):
+        new_df[col] = 1/(data[col] + 1)
+    return new_df
+# 对数归一化
+def log_normalization(data):
     """
-    使用min-max方法标准化数据
+    使用log方法标准化数据
 
     :param data:输入数据
     :return:标准化后的数据
@@ -90,9 +122,8 @@ def min_max(data):
     new_df = pd.DataFrame(columns=data.columns)
     new_df["Date"] = data["Date"]
     for col in data.columns[1:]:
-        new_df[col] = (data[col] - data[col].min()) / (data[col].max() - data[col].min())
-    return new_df, data["Discharge"].min(), data["Discharge"].max()
-
+        new_df[col] = - np.log(data[col] + 1)
+    return new_df
 
 def reverse_min_max(data, origin_min, origin_max):
     """
