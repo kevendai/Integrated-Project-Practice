@@ -56,6 +56,9 @@ class MLPRegressor(nn.Module):
                 self.layers.append(nn.Sigmoid())
         self.layers.append(nn.Linear(self.hidden_layer_sizes[-1], 1))
 
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print("device:", self.device)
+
     def init_layers(self, input_size):
         # 替换第一层的输入大小
         self.layers[0] = nn.Linear(input_size, self.hidden_layer_sizes[0])
@@ -78,12 +81,14 @@ class MLPRegressor(nn.Module):
         else:
             raise Exception("不支持的优化器")
         loss_func = nn.MSELoss()
+        self.layers.to(self.device)
+        self.to(self.device)
         last_loss = float("inf")
         epoch_loss = 0
         for epoch in range(self.max_iter):
             for batch_X, batch_y in dataloader:
-                output = self(batch_X)
-                loss = loss_func(output, batch_y)
+                output = self.forward(batch_X.to(self.device))
+                loss = loss_func(output, batch_y.to(self.device))
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
@@ -94,12 +99,21 @@ class MLPRegressor(nn.Module):
             with torch.no_grad():
                 last_loss = epoch_loss
                 epoch_loss = 0
-            # print("epoch: {}, loss: {}".format(epoch, last_loss))
+            print("epoch: {}, loss: {}".format(epoch, last_loss))
 
 
     def predict(self, X):
-        X = torch.tensor(X, dtype=torch.float32)
-        return self(X).detach().numpy()
+        data = torch.tensor(X, dtype=torch.float32)
+        data = data.to(self.device)
+        dataset = torch.utils.data.TensorDataset(data)
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=1)
+        with torch.no_grad():
+            y_pred = []
+            for batch_X in dataloader:
+                y_pred.append(self.forward(batch_X[0]))
+            y_pred = torch.cat(y_pred, dim=0)
+            y_pred = y_pred.cpu().numpy()
+        return y_pred
 
     def score(self, X, y):
         X = torch.tensor(X, dtype=torch.float32)
@@ -110,7 +124,7 @@ class MLPRegressor(nn.Module):
         with torch.no_grad():
             y_pred = []
             for batch_X, batch_y in test_dataloader:
-                y_pred.append(self(batch_X))
+                y_pred.append(self.forward(batch_X.to(self.device)).cpu())
             y_pred = torch.cat(y_pred, dim=0)
             y_pred = y_pred.numpy()
             y = y.reshape(-1, 1)
