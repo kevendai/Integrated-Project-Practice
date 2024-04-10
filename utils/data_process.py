@@ -80,7 +80,6 @@ def Z_score(data, train_size=0.8):
     std = data.iloc[:int(len(data) * train_size), 1:].std()
     for col in data.columns[1:]:
         new_df[col] = (data[col] - mean[col]) / std[col]
-    print(new_df)
     return new_df, data["Discharge"].mean(), data["Discharge"].std()
 
 
