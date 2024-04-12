@@ -125,7 +125,40 @@ class Basin_Clustering:
 
         return kmeans.labels_
 
-    def fit(self, n_clusters=3, n_components=5, is_PCA=True):
+    def DBSCAN(self, eps=0.5, min_samples=5):
+        """
+        DBSCAN聚类
+        Args:
+            eps: 半径，默认为0.5
+            min_samples: 最小样本数，默认为5
+
+        Returns:
+
+        """
+        from sklearn.cluster import DBSCAN
+        data = np.array(list(self.feature_dict.values()))
+        dbscan = DBSCAN(eps=eps, min_samples=min_samples)
+        dbscan.fit(data)
+
+        return dbscan.labels_
+
+    def AGNES(self, n_clusters=3):
+        """
+        AGNES聚类
+        Args:
+            n_clusters: 聚类数，默认为3
+
+        Returns:
+
+        """
+        from sklearn.cluster import AgglomerativeClustering
+        data = np.array(list(self.feature_dict.values()))
+        agnes = AgglomerativeClustering(n_clusters=n_clusters)
+        agnes.fit(data)
+
+        return agnes.labels_
+
+    def fit(self, n_clusters=3, n_components=5, is_PCA=True, Clustering_func="KMeans", eps=None, min_samples=None):
         """
         聚类
 
@@ -133,6 +166,9 @@ class Basin_Clustering:
             n_clusters: 聚类数，默认为3
             n_components: 降维后的维度，默认为5
             is_PCA: 是否进行PCA降维，默认为True
+            Clustering_func: 聚类方法，默认为"KMeans"，可选"DBSCAN"、"AGNES"
+            eps: DBSCAN半径，默认为None
+            min_samples: DBSCAN最小样本数，默认为None
 
         Returns:
 
@@ -142,7 +178,14 @@ class Basin_Clustering:
             self.csvfiles2features()
             if is_PCA:
                 self.PCA4Clustering(n_components=n_components)
-        labels = self.KMeans(n_clusters=n_clusters)
+        if Clustering_func == "KMeans":
+            labels = self.KMeans(n_clusters=n_clusters)
+        elif Clustering_func == "DBSCAN" and eps is not None and min_samples is not None:
+            labels = self.DBSCAN(eps=eps, min_samples=min_samples)
+        elif Clustering_func == "AGNES":
+            labels = self.AGNES(n_clusters=n_clusters)
+        else:
+            raise Exception("不支持的聚类方法，或缺少参数")
         for i in range(len(self.feature_dict.keys())):
             self.Clustering_result[list(self.feature_dict.keys())[i]] = labels[i]
 
