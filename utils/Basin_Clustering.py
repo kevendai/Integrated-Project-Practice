@@ -26,7 +26,7 @@ class Basin_Clustering:
         Normalize_func: 归一化方法，默认为"min_max"，可选"Z_score"
 
     """
-    def __init__(self, root_path="./data/dataset02", train_size=1.0, Normalize_func="min_max"):
+    def __init__(self, root_path="./data/dataset02", train_size=1.0, Normalize_func="min_max", is_PCA=True):
         self.data_root_path = root_path
         self.train_size = 1.0
         self.Clustering_result = {}
@@ -36,6 +36,7 @@ class Basin_Clustering:
         self.Normalize_func = Normalize_func
         self.K = None
         self.SSE_list = None
+        self.is_PCA = is_PCA
 
     def csv2feature(self, data_root):
         """
@@ -158,14 +159,13 @@ class Basin_Clustering:
 
         return agnes.labels_
 
-    def fit(self, n_clusters=3, n_components=5, is_PCA=True, Clustering_func="KMeans", eps=None, min_samples=None):
+    def fit(self, n_clusters=3, n_components=5, Clustering_func="KMeans", eps=None, min_samples=None):
         """
         聚类
 
         Args:
             n_clusters: 聚类数，默认为3
             n_components: 降维后的维度，默认为5
-            is_PCA: 是否进行PCA降维，默认为True
             Clustering_func: 聚类方法，默认为"KMeans"，可选"DBSCAN"、"AGNES"
             eps: DBSCAN半径，默认为None
             min_samples: DBSCAN最小样本数，默认为None
@@ -176,7 +176,7 @@ class Basin_Clustering:
         self.K = n_clusters
         if self.feature_dict is None:
             self.csvfiles2features()
-            if is_PCA:
+            if self.is_PCA:
                 self.PCA4Clustering(n_components=n_components)
         if Clustering_func == "KMeans":
             labels = self.KMeans(n_clusters=n_clusters)
@@ -190,21 +190,20 @@ class Basin_Clustering:
             self.Clustering_result[list(self.feature_dict.keys())[i]] = labels[i]
 
     # 肘部法
-    def elbow_method(self, n_components=5, max_k=20, is_PCA=True):
+    def elbow_method(self, n_components=5, max_k=20):
         """
         肘部法确定最佳聚类数
 
         Args:
             n_components: 降维后的维度，默认为5
             max_k: 最大聚类数，默认为20
-            is_PCA: 是否进行PCA降维，默认为True
 
         Returns:
 
         """
         self.SSE_list = []
         for i in range(2, max_k):
-            self.fit(n_clusters=i, n_components=n_components, is_PCA=is_PCA)
+            self.fit(n_clusters=i, n_components=n_components)
             self.SSE_list.append(self.SSE())
         # 画图
         import matplotlib.pyplot as plt
