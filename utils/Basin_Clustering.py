@@ -24,6 +24,10 @@ class Basin_Clustering:
         Clustering_func: 聚类方法
         train_size: 训练集大小，默认为1.0
         Normalize_func: 归一化方法，默认为"min_max"，可选"Z_score"
+        K: 聚类数
+        SSE_list: SSE列表
+        is_PCA: 是否进行PCA，默认为True
+        Clustering_dict: 聚类字典，Key为聚类类别，Value为文件名列表
 
     """
     def __init__(self, root_path="./data/dataset02", train_size=1.0, Normalize_func="min_max", is_PCA=True):
@@ -37,6 +41,7 @@ class Basin_Clustering:
         self.K = None
         self.SSE_list = None
         self.is_PCA = is_PCA
+        self.Clustering_dict = {}
 
     def csv2feature(self, data_root):
         """
@@ -232,6 +237,23 @@ class Basin_Clustering:
         for i in range(len(data)):
             SSE += np.linalg.norm(data[i] - centers[labels[i]])
         return SSE
+
+    def genorate_Clustering_dict(self):
+        """
+        生成聚类字典
+
+        Args:
+
+        Returns:
+
+        """
+        for i in range(len(self.Clustering_result.keys())):
+            if self.Clustering_result[list(self.Clustering_result.keys())[i]] not in self.Clustering_dict.keys():
+                self.Clustering_dict[self.Clustering_result[list(self.Clustering_result.keys())[i]]] = [list(self.Clustering_result.keys())[i]]
+            else:
+                self.Clustering_dict[self.Clustering_result[list(self.Clustering_result.keys())[i]]].append(list(self.Clustering_result.keys())[i])
+
+        return self.Clustering_dict
 
 
 

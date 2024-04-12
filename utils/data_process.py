@@ -41,6 +41,47 @@ def read_from_dataset_folders(path="./data/dataset02", cal_avg=True, drop_Swe=Tr
     return data
 
 
+def read_from_list(data_list, drop_Swe=True, is_add_Prcp=True):
+    """
+    通过列表读取文件
+
+    :param data_list:输入列表数据
+    :param drop_Swe:是否删除Swe列
+    :return:数据
+    """
+    data = pd.read_csv(data_list[0])
+    if drop_Swe:
+        data = data.drop("Swe", axis=1)
+    data = add_5days_before(data, is_add_Prcp=is_add_Prcp)
+    for i in range(1, len(data_list)):
+        if data_list[i].split(".")[-1] != "csv":
+            data_list[i] = data_list[i] + ".csv"
+        new_data = pd.read_csv(data_list[i])
+        if drop_Swe:
+            new_data = new_data.drop("Swe", axis=1)
+        new_data = add_5days_before(new_data, is_add_Prcp=is_add_Prcp)
+        data = pd.concat([data, new_data], axis=0)
+    data = data.dropna()
+    data = data.reset_index(drop=True)
+
+    return data
+
+
+def read_from_csv(path="./data/01333000.csv", drop_Swe=True, is_add_Prcp=True):
+    """
+    通过csv文件读取数据
+
+    :param path:输入文件路径
+    :param drop_Swe:是否删除Swe列
+    :return:数据
+    """
+    data = pd.read_csv(path)
+    if drop_Swe:
+        data = data.drop("Swe", axis=1)
+    data = add_5days_before(data, is_add_Prcp=is_add_Prcp)
+    return data
+
+
 def add_5days_before(data, is_add_Prcp=True):
     """
     加入前五天的数据，同时删除最早五天的数据
@@ -98,6 +139,7 @@ def min_max(data, train_size=0.8):
         new_df[col] = (data[col] - min_value[col]) / (max_value[col] - min_value[col] + 1e-8)
     return new_df, data["Discharge"].min(), data["Discharge"].max()
 
+
 # Z-score简单归一化
 def Z_score_simple(data):
     """
@@ -109,8 +151,10 @@ def Z_score_simple(data):
     new_df = pd.DataFrame(columns=data.columns)
     new_df["Date"] = data["Date"]
     for col in data.columns[1:]:
-        new_df[col] = 1/(data[col] + 1)
+        new_df[col] = 1 / (data[col] + 1)
     return new_df
+
+
 # 对数归一化
 def log_normalization(data):
     """
@@ -124,6 +168,7 @@ def log_normalization(data):
     for col in data.columns[1:]:
         new_df[col] = - np.log(data[col] + 1)
     return new_df
+
 
 def reverse_min_max(data, origin_min, origin_max):
     """
