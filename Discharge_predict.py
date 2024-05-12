@@ -7,6 +7,8 @@
 @Date    ：2024/3/9 0:11 
 @Function：
 """
+import os
+import json
 import pandas as pd
 
 from utils.data_process import read_from_dataset_folders, add_5days_before, Z_score, min_max
@@ -227,13 +229,14 @@ class Discharge_Predict:
             if is_visual:
                 self._Visualization(y_train_predict, y_test_predict)
 
+        self.model = model
         if self.reverse_method is None:
             return mean_squared_error(self.y_test, y_test_predict)
         else:
             return mean_squared_error(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
                                       self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
 
-def get_best_model(data, cv=3, feature_num=5, is_reverse=False, train_size=0.8):
+def get_best_model(data, cv=3, feature_num=5, is_reverse=False, train_size=0.8, is_data_raw=True, model_save_path=None):
     """
     两种归一化方案（Z-score和min-max）、
     两种特征选择方案（Pearson相关系数和SVM法）、
@@ -252,7 +255,8 @@ def get_best_model(data, cv=3, feature_num=5, is_reverse=False, train_size=0.8):
     best_feature = None
     best_selector_norm = None
     best_norm = None
-    data = add_5days_before(data)
+    if is_data_raw:
+        data = add_5days_before(data)
     Normalization = [Z_score, min_max]
     reverse_Normalization = [reverse_Z_score, reverse_min_max]
     for Norm_method, reverse_method in zip(Normalization, reverse_Normalization):
@@ -278,6 +282,13 @@ def get_best_model(data, cv=3, feature_num=5, is_reverse=False, train_size=0.8):
                     best_feature = selector_method.feature_result
                     best_selector_norm = selector_method.func
                     best_norm = Norm_method.__name__
+                    if model_save_path is not None:
+                        if os.path.exists(model_save_path) is False:
+                            os.makedirs(model_save_path)
+                        # 保存discharge_predict.model整个模型到json文件，文件名包括归一化方法、特征选择方法、特征数、模型名
+                        with open(os.path.join(model_save_path, f"{Norm_method.__name__}_{selector_method.func}_{feature_num}_{model_name}.json"), "w") as f:
+                            json.dump(discharge_predict.model, f)
+
     print(f"最优模型：{best_model_name}，最优特征：{best_feature}，最优特征选择方法：{best_selector_norm}，"
           f"最优归一化方法：{best_norm}，测试集MSE：{best_mse}")
 

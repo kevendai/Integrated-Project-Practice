@@ -10,7 +10,7 @@
 import pandas as pd
 import os
 import numpy as np
-from data_process import Z_score, min_max
+from utils.data_process import Z_score, min_max
 
 class Basin_Clustering:
     """

@@ -13,6 +13,31 @@ import os
 import copy
 import numpy as np
 
+def add_5days_before(data, is_add_Prcp=True):
+    """
+    加入前五天的数据，同时删除最早五天的数据
+
+    :param data:输入不少于5天的数据
+    :param is_add_Prcp:是否加入降水量
+    :return:加入5天前的数据，数据标签为one_Discharge, two_Discharge, three_Discharge, four_Discharge, five_Discharge，
+    如果加入降水量，标签为one_Prcp, two_Prcp, three_Prcp, four_Prcp, five_Prcp
+    """
+    if len(data) < 5:
+        raise Exception("数据长度不足5天")
+
+    add_col_name = ["one_Discharge", "two_Discharge", "three_Discharge", "four_Discharge", "five_Discharge"]
+
+    if is_add_Prcp:
+        # 添加五天的降水量
+        add_col_name += ["one_Prcp", "two_Prcp", "three_Prcp", "four_Prcp", "five_Prcp"]
+
+    for i in range(len(add_col_name)):
+        feature_name = add_col_name[i].split("_")[1]
+        data[add_col_name[i]] = data[feature_name].shift(i % 5 + 1)
+
+    data = data.dropna()
+    return data
+
 
 def read_from_dataset_folders(path="./data/dataset02", cal_avg=True, drop_Swe=True):
     # 读取文件夹下所有文件
@@ -41,26 +66,33 @@ def read_from_dataset_folders(path="./data/dataset02", cal_avg=True, drop_Swe=Tr
     return data
 
 
-def read_from_list(data_list, drop_Swe=True, is_add_Prcp=True):
+def read_from_list(data_root, data_list, drop_Swe=True, is_add_Prcp=True, train_size=0.8):
     """
     通过列表读取文件
 
+    :param data_root:数据根目录
     :param data_list:输入列表数据
     :param drop_Swe:是否删除Swe列
     :return:数据
     """
-    data = pd.read_csv(data_list[0])
+    data = pd.read_csv(os.path.join(data_root, data_list[0]))
     if drop_Swe:
         data = data.drop("Swe", axis=1)
     data = add_5days_before(data, is_add_Prcp=is_add_Prcp)
+    train = copy.deepcopy(data.iloc[:int(len(data) * train_size)])
+    test = copy.deepcopy(data.iloc[int(len(data) * train_size):])
     for i in range(1, len(data_list)):
         if data_list[i].split(".")[-1] != "csv":
             data_list[i] = data_list[i] + ".csv"
-        new_data = pd.read_csv(data_list[i])
+        data = pd.read_csv(os.path.join(data_root, data_list[i]))
         if drop_Swe:
-            new_data = new_data.drop("Swe", axis=1)
-        new_data = add_5days_before(new_data, is_add_Prcp=is_add_Prcp)
-        data = pd.concat([data, new_data], axis=0)
+            data = data.drop("Swe", axis=1)
+        data = add_5days_before(data, is_add_Prcp=is_add_Prcp)
+
+        train = pd.concat([train, copy.deepcopy(data.iloc[:int(len(data) * train_size)])], axis=0)
+        test = pd.concat([test, copy.deepcopy(data.iloc[int(len(data) * train_size):])], axis=0)
+
+    data = pd.concat([train, test], axis=0)
     data = data.dropna()
     data = data.reset_index(drop=True)
 
@@ -79,32 +111,6 @@ def read_from_csv(path="./data/01333000.csv", drop_Swe=True, is_add_Prcp=True):
     if drop_Swe:
         data = data.drop("Swe", axis=1)
     data = add_5days_before(data, is_add_Prcp=is_add_Prcp)
-    return data
-
-
-def add_5days_before(data, is_add_Prcp=True):
-    """
-    加入前五天的数据，同时删除最早五天的数据
-
-    :param data:输入不少于5天的数据
-    :param is_add_Prcp:是否加入降水量
-    :return:加入5天前的数据，数据标签为one_Discharge, two_Discharge, three_Discharge, four_Discharge, five_Discharge，
-    如果加入降水量，标签为one_Prcp, two_Prcp, three_Prcp, four_Prcp, five_Prcp
-    """
-    if len(data) < 5:
-        raise Exception("数据长度不足5天")
-
-    add_col_name = ["one_Discharge", "two_Discharge", "three_Discharge", "four_Discharge", "five_Discharge"]
-
-    if is_add_Prcp:
-        # 添加五天的降水量
-        add_col_name += ["one_Prcp", "two_Prcp", "three_Prcp", "four_Prcp", "five_Prcp"]
-
-    for i in range(len(add_col_name)):
-        feature_name = add_col_name[i].split("_")[1]
-        data[add_col_name[i]] = data[feature_name].shift(i % 5 + 1)
-
-    data = data.dropna()
     return data
 
 
