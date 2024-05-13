@@ -126,7 +126,7 @@ class Discharge_Predict:
         plt.show()
 
     def BPNN_Discharge(self, hidden_layer_sizes=(100, 100, 100), learning_rate_init=0.001, activation='relu',
-                       solver='adam', is_save=False):
+                       solver='adam', is_save=False, is_visual=True, max_iter=3000):
         """
         BP神经网络预测
 
@@ -140,13 +140,15 @@ class Discharge_Predict:
 
         self.model_name = "BP神经网络"
         # 开始训练
-        model = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes, max_iter=1000,
+        model = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes, max_iter=max_iter,
                              learning_rate_init=learning_rate_init, activation=activation, solver=solver)
         model.fit(self.X_train, self.y_train)
         y_train_predict = model.predict(self.X_train)
         y_test_predict = model.predict(self.X_test)
+        self.model = model
 
-        self._Visualization(y_train_predict, y_test_predict, is_save=is_save)
+        if is_visual:
+            self._Visualization(y_train_predict, y_test_predict, is_save=is_save)
 
         if self.reverse_method is None:
             return mean_squared_error(self.y_test, y_test_predict)
@@ -154,7 +156,7 @@ class Discharge_Predict:
             return mean_squared_error(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
                                       self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
 
-    def SVM_Discharge(self, kernel='linear', C=1.0, gamma='scale', tol=1e-3, is_save=False):
+    def SVM_Discharge(self, kernel='linear', C=1.0, gamma='scale', tol=1e-3, is_save=False, is_visual=True, max_iter=3000):
         """
         SVM预测
 
@@ -168,13 +170,15 @@ class Discharge_Predict:
 
         self.model_name = "SVM"
         # 开始训练
-        model = SVR(kernel=kernel, C=C, gamma=gamma, max_iter=1000, tol=tol)
+        model = SVR(kernel=kernel, C=C, gamma=gamma, max_iter=max_iter, tol=tol)
         model.fit(self.X_train, self.y_train)
         y_train_predict = model.predict(self.X_train)
         y_test_predict = model.predict(self.X_test)
+        self.model = model
 
         # 可视化
-        self._Visualization(y_train_predict, y_test_predict, is_save=is_save)
+        if is_visual:
+            self._Visualization(y_train_predict, y_test_predict, is_save=is_save)
 
         # 返回测试集MSE
         if self.reverse_method is None:
@@ -231,14 +235,15 @@ class Discharge_Predict:
             if is_visual:
                 self._Visualization(y_train_predict, y_test_predict)
 
-        self.model = model
+        self.model = model.best_estimator_
         if self.reverse_method is None:
             return mean_squared_error(self.y_test, y_test_predict)
         else:
             return mean_squared_error(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
                                       self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
 
-def get_best_model(data, cv=3, feature_num=5, is_reverse=False, train_size=0.8, is_data_raw=True, model_save_path=None):
+def get_best_model(data, cv=3, feature_num=5, is_reverse=False, train_size=0.8, is_data_raw=True, model_save_path=None,
+                   simple_mode=False, max_iter=3000):
     """
     两种归一化方案（Z-score和min-max）、
     两种特征选择方案（Pearson相关系数和SVM法）、
@@ -275,7 +280,13 @@ def get_best_model(data, cv=3, feature_num=5, is_reverse=False, train_size=0.8, 
                                                           reverse_param=(origin_param1, origin_param2), train_size=train_size)
                 else:
                     discharge_predict = Discharge_Predict(norm_data, selector_method.feature_result, train_size=train_size)
-                mse_ = discharge_predict.Grid_search_CV(model_name, cv=cv, is_visual=False)
+                if not simple_mode:
+                    mse_ = discharge_predict.Grid_search_CV(model_name, cv=cv, is_visual=False, max_iter=max_iter)
+                elif model_name=="SVM":
+                    mse_ = discharge_predict.SVM_Discharge(C=10, gamma='auto', kernel='rbf', tol=0.001, max_iter=max_iter, is_visual=False)
+                else:
+                    mse_ = discharge_predict.BPNN_Discharge(hidden_layer_sizes=(150, 150, 150), learning_rate_init=0.01, solver='adam', activation='relu', is_visual=False)
+
                 print(f"归一化方法：{Norm_method.__name__}，特征选择方法：{selector_method.func}，"
                       f"特征数：{feature_num}，模型：{model_name}，测试集MSE：{mse_}")
                 if mse_ < best_mse:
