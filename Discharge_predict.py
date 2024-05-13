@@ -9,6 +9,8 @@
 """
 import os
 import json
+
+import joblib
 import pandas as pd
 
 from utils.data_process import read_from_dataset_folders, add_5days_before, Z_score, min_max
@@ -181,7 +183,7 @@ class Discharge_Predict:
             return mean_squared_error(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
                                       self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
 
-    def Grid_search_CV(self, model_name, cv=3, is_visual=True, max_iter=5000, verbose=0):
+    def Grid_search_CV(self, model_name, cv=3, is_visual=True, max_iter=100, verbose=0):
         """
         网格搜索交叉验证
 
@@ -286,8 +288,7 @@ def get_best_model(data, cv=3, feature_num=5, is_reverse=False, train_size=0.8, 
                         if os.path.exists(model_save_path) is False:
                             os.makedirs(model_save_path)
                         # 保存discharge_predict.model整个模型到json文件，文件名包括归一化方法、特征选择方法、特征数、模型名
-                        with open(os.path.join(model_save_path, f"{Norm_method.__name__}_{selector_method.func}_{feature_num}_{model_name}.json"), "w") as f:
-                            json.dump(discharge_predict.model, f)
+                        joblib.dump(discharge_predict.model, os.path.join(model_save_path, f"{Norm_method.__name__}_{selector_method.func}_{feature_num}_{model_name}.pkl"))
 
     print(f"最优模型：{best_model_name}，最优特征：{best_feature}，最优特征选择方法：{best_selector_norm}，"
           f"最优归一化方法：{best_norm}，测试集MSE：{best_mse}")
