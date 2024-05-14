@@ -7,6 +7,7 @@
 @Date    ：2024/3/9 0:11 
 @Function：
 """
+import copy
 import os
 import json
 
@@ -57,6 +58,11 @@ class Discharge_Predict:
         else:
             self.reverse_param1, self.reverse_param2 = reverse_param
         self.reverse_method = reverse_method
+
+        self.y_test_predict = None
+        self.y_test_reverse = None
+
+        self.best_params = None
 
     def _data_split(self, train_size=0.8):
         """
@@ -126,7 +132,7 @@ class Discharge_Predict:
         plt.show()
 
     def BPNN_Discharge(self, hidden_layer_sizes=(100, 100, 100), learning_rate_init=0.001, activation='relu',
-                       solver='adam', is_save=False, is_visual=True, max_iter=3000):
+                       solver='adam', is_save=False, is_visual=True, max_iter=3000, score_func="mse"):
         """
         BP神经网络预测
 
@@ -145,18 +151,29 @@ class Discharge_Predict:
         model.fit(self.X_train, self.y_train)
         y_train_predict = model.predict(self.X_train)
         y_test_predict = model.predict(self.X_test)
+        self.y_test_predict = self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2)
+        self.y_test_reverse = self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2)
         self.model = model
 
         if is_visual:
             self._Visualization(y_train_predict, y_test_predict, is_save=is_save)
 
-        if self.reverse_method is None:
-            return mean_squared_error(self.y_test, y_test_predict)
+        if score_func == "mse":
+            if self.reverse_method is None:
+                return mean_squared_error(self.y_test, y_test_predict)
+            else:
+                return mean_squared_error(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
+                                          self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
+        elif score_func == "R2":
+            if self.reverse_method is None:
+                return r2_score(self.y_test, y_test_predict)
+            else:
+                return r2_score(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
+                                self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
         else:
-            return mean_squared_error(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
-                                      self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
+            raise ValueError("不支持的评价指标")
 
-    def SVM_Discharge(self, kernel='linear', C=1.0, gamma='scale', tol=1e-3, is_save=False, is_visual=True, max_iter=3000):
+    def SVM_Discharge(self, kernel='linear', C=1.0, gamma='scale', tol=1e-3, is_save=False, is_visual=True, max_iter=3000, score_func="mse"):
         """
         SVM预测
 
@@ -174,6 +191,8 @@ class Discharge_Predict:
         model.fit(self.X_train, self.y_train)
         y_train_predict = model.predict(self.X_train)
         y_test_predict = model.predict(self.X_test)
+        self.y_test_predict = self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2)
+        self.y_test_reverse = self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2)
         self.model = model
 
         # 可视化
@@ -181,13 +200,22 @@ class Discharge_Predict:
             self._Visualization(y_train_predict, y_test_predict, is_save=is_save)
 
         # 返回测试集MSE
-        if self.reverse_method is None:
-            return mean_squared_error(self.y_test, y_test_predict)
+        if score_func == "mse":
+            if self.reverse_method is None:
+                return mean_squared_error(self.y_test, y_test_predict)
+            else:
+                return mean_squared_error(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
+                                          self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
+        elif score_func == "R2":
+            if self.reverse_method is None:
+                return r2_score(self.y_test, y_test_predict)
+            else:
+                return r2_score(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
+                                self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
         else:
-            return mean_squared_error(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
-                                      self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
+            raise ValueError("不支持的评价指标")
 
-    def Grid_search_CV(self, model_name, cv=3, is_visual=True, max_iter=100, verbose=0):
+    def Grid_search_CV(self, model_name, cv=3, is_visual=True, max_iter=100, verbose=0, score_func="mse"):
         """
         网格搜索交叉验证
 
@@ -202,7 +230,8 @@ class Discharge_Predict:
         if model_name == "BP神经网络":
             self.model_name = "BP神经网络"
             param_grid = {
-                'hidden_layer_sizes': [(50, 50, 50), (100, 100, 100), (150, 150, 150)],
+                #'hidden_layer_sizes': [(50, 50, 50), (100, 100, 100), (150, 150, 150)],
+                'hidden_layer_sizes': [(100, 100, 100), (150, 150, 150)],
                 'learning_rate_init': [0.001, 0.01, 0.1],
                 'activation': ['relu', 'logistic', 'tanh'],
                 'solver': ['adam', 'sgd']
@@ -211,6 +240,8 @@ class Discharge_Predict:
             model.fit(self.X_train, self.y_train)
             y_train_predict = model.predict(self.X_train)
             y_test_predict = model.predict(self.X_test)
+            self.y_test_predict = self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2)
+            self.y_test_reverse = self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2)
 
             # 可视化
             print(f"{self.model_name}的最优参数：{model.best_params_}")
@@ -236,14 +267,22 @@ class Discharge_Predict:
                 self._Visualization(y_train_predict, y_test_predict)
 
         self.model = model.best_estimator_
-        if self.reverse_method is None:
-            return mean_squared_error(self.y_test, y_test_predict)
-        else:
-            return mean_squared_error(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
-                                      self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
+        self.best_params = model.best_params_
+        if score_func == "mse":
+            if self.reverse_method is None:
+                return mean_squared_error(self.y_test, y_test_predict)
+            else:
+                return mean_squared_error(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
+                                          self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
+        elif score_func == "R2":
+            if self.reverse_method is None:
+                return r2_score(self.y_test, y_test_predict)
+            else:
+                return r2_score(self.reverse_method(self.y_test, self.reverse_param1, self.reverse_param2),
+                                self.reverse_method(y_test_predict, self.reverse_param1, self.reverse_param2))
 
 def get_best_model(data, cv=3, feature_num=5, is_reverse=False, train_size=0.8, is_data_raw=True, model_save_path=None,
-                   simple_mode=False, max_iter=3000):
+                   simple_mode=False, max_iter=3000, score_func="mse"):
     """
     两种归一化方案（Z-score和min-max）、
     两种特征选择方案（Pearson相关系数和SVM法）、
@@ -257,7 +296,10 @@ def get_best_model(data, cv=3, feature_num=5, is_reverse=False, train_size=0.8, 
 
     :return: 最优模型的测试集MSE
     """
-    best_mse = float("inf")
+    if score_func == "mse":
+        best_mse = float("inf")
+    else:
+        best_mse = 0
     best_model_name = None
     best_feature = None
     best_selector_norm = None
@@ -269,8 +311,13 @@ def get_best_model(data, cv=3, feature_num=5, is_reverse=False, train_size=0.8, 
     for Norm_method, reverse_method in zip(Normalization, reverse_Normalization):
         norm_data, origin_param1, origin_param2 = Norm_method(data, train_size=train_size)
         selector = [Feature_Select(), Feature_Select()]
-        features = [selector[0].Pearson_Correlation2nfeature(norm_data, feature_num),
-                    selector[1].SVM2nfeature(norm_data, feature_num)]
+        # 从数据中随机抽出0.2的数据进行特征选择
+        if len(norm_data) > 100000 and input(f"共有{len(norm_data)}条数据，数据量过大，是否采用其中随机20%数据进行特征选择？(y/n)") == "y":
+            feature_data = norm_data.sample(frac=0.2)
+        else:
+            feature_data = norm_data
+        features = [selector[0].Pearson_Correlation2nfeature(feature_data, feature_num),
+                    selector[1].SVM2nfeature(feature_data, feature_num)]
         for selector_method in selector:
             for model_name in ["SVM", "BP神经网络"]:
                 print("-" * 10 + "正在进行基于{}归一化方法、{}特征选择方法、{}模型的网格搜索交叉验证".format(Norm_method.__name__,
@@ -281,15 +328,17 @@ def get_best_model(data, cv=3, feature_num=5, is_reverse=False, train_size=0.8, 
                 else:
                     discharge_predict = Discharge_Predict(norm_data, selector_method.feature_result, train_size=train_size)
                 if not simple_mode:
-                    mse_ = discharge_predict.Grid_search_CV(model_name, cv=cv, is_visual=False, max_iter=max_iter)
+                    mse_ = discharge_predict.Grid_search_CV(model_name, cv=cv, is_visual=False, max_iter=max_iter, score_func=score_func)
                 elif model_name=="SVM":
-                    mse_ = discharge_predict.SVM_Discharge(C=10, gamma='auto', kernel='rbf', tol=0.001, max_iter=max_iter, is_visual=False)
+                    mse_ = discharge_predict.SVM_Discharge(C=10, gamma='auto', kernel='rbf', tol=0.001, max_iter=max_iter, is_visual=False, score_func=score_func)
                 else:
-                    mse_ = discharge_predict.BPNN_Discharge(hidden_layer_sizes=(150, 150, 150), learning_rate_init=0.01, solver='adam', activation='relu', is_visual=False)
+                    mse_ = discharge_predict.BPNN_Discharge(hidden_layer_sizes=(150, 150, 150), learning_rate_init=0.01, solver='adam', activation='relu', is_visual=False, score_func=score_func)
 
                 print(f"归一化方法：{Norm_method.__name__}，特征选择方法：{selector_method.func}，"
-                      f"特征数：{feature_num}，模型：{model_name}，测试集MSE：{mse_}")
-                if mse_ < best_mse:
+                      f"特征数：{feature_num}，模型：{model_name}，测试集{score_func}：{mse_}")
+                if (mse_ < -1 or mse_ > 1) and score_func == "R2":
+                    mse_ = -1
+                if (mse_ < best_mse and score_func == "mse") or (mse_ > best_mse and score_func == "R2"):
                     best_mse = mse_
                     best_model_name = model_name
                     best_feature = selector_method.feature_result
@@ -299,10 +348,13 @@ def get_best_model(data, cv=3, feature_num=5, is_reverse=False, train_size=0.8, 
                         if os.path.exists(model_save_path) is False:
                             os.makedirs(model_save_path)
                         # 保存discharge_predict.model整个模型到json文件，文件名包括归一化方法、特征选择方法、特征数、模型名
+                        # 删除文件夹下所有文件
+                        for file in os.listdir(model_save_path):
+                            os.remove(os.path.join(model_save_path, file))
                         joblib.dump(discharge_predict.model, os.path.join(model_save_path, f"{Norm_method.__name__}_{selector_method.func}_{feature_num}_{model_name}.pkl"))
 
     print(f"最优模型：{best_model_name}，最优特征：{best_feature}，最优特征选择方法：{best_selector_norm}，"
-          f"最优归一化方法：{best_norm}，测试集MSE：{best_mse}")
+          f"最优归一化方法：{best_norm}，测试集{score_func}：{best_mse}")
 
 
 
