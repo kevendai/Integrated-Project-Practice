@@ -47,7 +47,10 @@ class Discharge_Predict:
     def __init__(self, data, features,  reverse_method=None, reverse_param=None, train_size=0.8, model_name=None):
         self.data = data
         self.features = features
-        self.features_names = features.tolist()
+        if isinstance(features, list):
+            self.features_names = features
+        else:
+            self.features_names = features.tolist()
         self.train_size = train_size
         self.X_train, self.X_test, self.y_train, self.y_test = self._data_split(self.train_size)
         self.test_MSE = None
