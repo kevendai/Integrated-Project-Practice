@@ -5,7 +5,7 @@
 @File    ：data_process.py
 @Author  ：Dai Yikai
 @Date    ：2024/3/7 20:36 
-@Function：读取文件、添加前五天数据
+@Function：读取文件、添加前五天数据、标准化数据、反标准化数据
 """
 
 import pandas as pd
